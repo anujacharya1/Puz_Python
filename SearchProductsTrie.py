@@ -6,7 +6,9 @@ Created on Sep 23, 2013
 from functools                      import wraps
 
 def joinMultidict(d, end):
-    
+    '''
+    Iterate over the mutiDict
+    '''
     if end in d :
         # found the exact match
         return None
@@ -14,20 +16,25 @@ def joinMultidict(d, end):
         s = ''
         result = list()
         stack = d.items()
-        while stack:
-            k, v = stack.pop()
-            
-            if k is not end:
-                s+=k
-            else:
-                result.append(s)
-                s=''
-                if len(result) is 10:
-                    # break when we get 10 result
-                    break
+        try: 
+            while stack:
+                k, v = stack.pop()
                 
-            if isinstance(v, dict):
-                stack.extend(v.iteritems())
+                if k is not end:
+                    s+=k
+                else:
+                    # Check if we reach the end i.e {'_end':'_end'}
+                    # end marks the end of word
+                    result.append(s)
+                    s=''
+                    if len(result) is 10:
+                        # break when we get 10 result
+                        break
+                    
+                if isinstance(v, dict):
+                    stack.extend(v.iteritems())
+        except Exception as e:
+            print('Exception joinMultidict: %s (%s)' % (e.message, type(e)))
     
         return result
 
@@ -61,8 +68,7 @@ def preprocess(fun):
 def parseThefile(input, search, *args, **kwargs):
     root    = kwargs['root']
     end     = kwargs['end']
-    result  = list()
-    
+
     # Join all the keys till end
     result = joinMultidict(root,end)
     if result is None:
@@ -74,8 +80,8 @@ def parseThefile(input, search, *args, **kwargs):
     print result
 
 if __name__ == '__main__':
-    input = ['iphone', 'ipad ', 'gmail']
-    search = 'iphon'
+    input = ['iphone', 'ipad', 'gmail']
+    search = 'ip'
     parseThefile(input, search)
     
     inputWithD  = ['da', 'db', 'dc', 'dd', 'de', 'df', 'dg', 'dh', 'di', 'dj', 'dk']
