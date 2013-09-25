@@ -5,38 +5,50 @@ Created on Sep 23, 2013
 '''
 from functools                      import wraps
 
-def joinMultidict(d, end):
+def nestedDictIteration(d,endDelimeter):
     '''
-    Iterate over the mutiDict
+    This function iterate over the nested dictonary
     '''
-    if end in d :
-        # found the exact match
-        return None
-    else:
-        s = ''
-        result = list()
-        stack = d.items()
-        try: 
+    #d = {'a': {'d': {'_end': '_end'}}, 'h': {'o': {'n': {'e': {'_end': '_end'}}}}}
+    #d = {'a': {'a': {'_end': '_end'}, '_end': '_end'}, '_end': '_end'}
+
+    stack = list() # A list behaving as stack
+    s =''
+    result = list()
+
+    for k in d.keys():
+        s+=k
+
+        if k is endDelimeter:
+            # If we found some exact match
+            result.append('')
+            d.pop(endDelimeter)
+              
+        else:
+            # Get the inside dict and put in stack
+            stack.append(d[k])
+            if endDelimeter in d[k] and (type(d[k]) is type({})):
+                # This here will get you 'a' if there is list containing [a,aa,aaa]
+                result.append(k)
             while stack:
-                k, v = stack.pop()
-                
-                if k is not end:
-                    s+=k
-                else:
-                    # Check if we reach the end i.e {'_end':'_end'}
-                    # end marks the end of word
-                    result.append(s)
-                    s=''
-                    if len(result) is 10:
-                        # break when we get 10 result
-                        break
-                    
-                if isinstance(v, dict):
-                    stack.extend(v.iteritems())
-        except Exception as e:
-            print('Exception joinMultidict: %s (%s)' % (e.message, type(e)))
-    
-        return result
+                # remove the dict from the stack
+                insideDict = stack.pop()
+                if (type(insideDict) == type({})):
+                    # if there is dict inside dict and not string
+                    for key in insideDict.keys():
+                        # Iterate over all the keys inside the dict
+                        if key is not endDelimeter:
+                            # I can make use list comprehension but for readbility purpose
+                            # i am not doing it
+                            
+                            s+=key
+                            stack.append(insideDict[key])
+            result.append(s)
+            if len(result) is 10:
+                # break when we get 10 result
+                break
+            s=''
+    return result
 
 def preprocess(fun):
     '''
@@ -56,7 +68,7 @@ def preprocess(fun):
         for letter in search:
             if letter in root:
                 root = root[letter]
-
+        
         kwargs['root']  =  root
         kwargs['end']   = _end # delimeter
         
@@ -70,22 +82,38 @@ def parseThefile(input, search, *args, **kwargs):
     end     = kwargs['end']
 
     # Join all the keys till end
-    result = joinMultidict(root,end)
+    result = nestedDictIteration(root,end)
     if result is None:
         # Found the exact match
         result = [search]
     else:
         result = [search+i for i in result]
-        
+         
     print result
 
 if __name__ == '__main__':
     input = ['iphone', 'ipad', 'gmail']
     search = 'ip'
     parseThefile(input, search)
-    
+      
     inputWithD  = ['da', 'db', 'dc', 'dd', 'de', 'df', 'dg', 'dh', 'di', 'dj', 'dk']
     searchD = 'd'
     parseThefile(inputWithD, searchD)
+     
+    inputWithG  = ['a', 'aa', 'aaa']
+    searchG = 'a'
+     
+    parseThefile(inputWithG, searchG)
+     
+    inputWithH  = ['apple']
+    searchH = 'apple'
+     
+    parseThefile(inputWithH, searchH)
+     
+    inputWithI  = ['apple', 'apple']
+    searchI = 'apple'
+     
+    parseThefile(inputWithI, searchI)
+    
     
     
